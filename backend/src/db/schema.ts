@@ -1,11 +1,10 @@
 import { pgTable, uuid, varchar, text, boolean, timestamp, index, unique, primaryKey } from 'drizzle-orm/pg-core';
-import { eq, sql } from 'drizzle-orm';
 import { relations } from 'drizzle-orm';
 
 // Users table
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
-  username: varchar('username', { length: 50 }).unique().notNull(),
+  username: varchar('username', { length: 50 }).notNull(),
   email: varchar('email', { length: 255 }).unique().notNull(),
   passwordHash: varchar('password_hash', { length: 255 }),
   isOnline: boolean('is_online').default(false),
@@ -37,6 +36,7 @@ export const chatMembers = pgTable('chat_members', {
 }, (table) => ({
   chatIdIdx: index('idx_chat_members_chat').on(table.chatId),
   chatUserUnique: unique('chat_member_unique').on(table.chatId, table.userId),
+  userIdIdx: index('idx_chat_members_user').on(table.userId),
 }));
 
 // Messages
@@ -66,9 +66,11 @@ export const notificationQueue = pgTable('notification_queue', {
 export const userSessions = pgTable('user_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  refreshToken: text('refresh_token').unique().notNull(),
   socketId: varchar('socket_id', { length: 255 }),
   activeChatId: uuid('active_chat_id').references(() => chats.id),
   connectedAt: timestamp('connected_at').defaultNow(),
+  expiresAt: timestamp('expires_at').notNull(),
 });
 
 // Relations

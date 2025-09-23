@@ -51,6 +51,18 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="text"
+                placeholder="Choose an email"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input

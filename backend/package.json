@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun --watch run src/index.ts "
   },
   "dependencies": {
     "@types/bcrypt": "^6.0.0",

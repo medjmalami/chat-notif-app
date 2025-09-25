@@ -5,6 +5,7 @@ import  jwt  from "jsonwebtoken";
 import { db } from "../../db";
 import { eq } from "drizzle-orm";
 import  bcrypt  from 'bcrypt';
+import { setCookie } from 'hono/cookie'
 
 const reqSchema = z.object({
     email: z.email(),
@@ -65,9 +66,23 @@ export const signinController = async (c : Context) => {
                                     .innerJoin(chatMembers, eq(chatMembers.chatId, chats.id))
                                     .where(eq(chatMembers.userId, user.id))
 
+            setCookie(c, 'accessToken', accessToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'Strict',
+                maxAge: 10 * 60 , // 10 minutes in seconds
+                path: '/'
+              })
+              
+              // Set refresh token
+            setCookie(c, 'refreshToken', refreshToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+              path: '/'
+            })
+
             return c.json({
-                accessToken,
-                refreshToken,
                 userId: user.id,
                 username: user.username,
                 chats: userChats,

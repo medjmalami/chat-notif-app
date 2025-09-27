@@ -36,7 +36,7 @@ export const signinController = async (c : Context) => {
         if (user.passwordHash){
             const match = await bcrypt.compare(req.password, user.passwordHash);
             if (!match) {
-                return c.json({ message: "Invalid credentials" }, 401);
+                return c.json({ message: "Invalid credentials" }, 400);
             }
 
             const payload  = {

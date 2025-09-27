@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation"
+import { fetchWrapper } from "../lib/fetchWrapper";
 
-export default function HomePage() {
-  // Redirect to login page as the default entry point
-  redirect("/auth/login")
+export default async function Home() {
+    const res = await fetchWrapper('/auth', 'GET');
+
+    if (res.status === 200) {
+        redirect('/chat');
+    }
+    redirect('auth/login');
 }

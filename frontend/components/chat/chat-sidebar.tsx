@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Hash, Users, Bell, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { fetchWrapper } from "@/lib/fetchWrapper"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 
 interface Room {
   id: string
@@ -28,10 +31,19 @@ interface ChatSidebarProps {
   onRoomSelect: (roomId: string) => void
 }
 
+
+
 export function ChatSidebar({ rooms, users, activeRoom, onRoomSelect }: ChatSidebarProps) {
   const channels = rooms.filter((room) => room.type === "channel")
   const directMessages = rooms.filter((room) => room.type === "direct")
   const onlineUsers = users.filter((user) => user.status === "online")
+
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    const response = await fetchWrapper("/logout", "GET");
+    router.push("/auth/login");
+  }
 
   return (
     <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
@@ -49,10 +61,8 @@ export function ChatSidebar({ rooms, users, activeRoom, onRoomSelect }: ChatSide
               Notifications
             </Link>
           </Button>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/auth/login">
+          <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
-            </Link>
           </Button>
         </div>
       </div>

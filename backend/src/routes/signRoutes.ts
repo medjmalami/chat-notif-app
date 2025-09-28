@@ -7,5 +7,5 @@ export const signRoutes = new Hono();
 
 signRoutes.post("/signup", signupController);
 signRoutes.post("/signin", signinController);
-signRoutes.post("/logout", logoutController);
+signRoutes.get("/logout", logoutController);
 signRoutes.get("/auth", authController);

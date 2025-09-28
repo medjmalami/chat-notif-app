@@ -4,7 +4,6 @@ import { secureHeaders } from 'hono/secure-headers';
 import { cors } from 'hono/cors';
 import rateLimit from 'hono-rate-limit';
 import { signRoutes } from './routes/signRoutes';
-import { authMiddleware } from './utils/middleware';
 
 
 const app = new Hono();
@@ -13,7 +12,12 @@ const app = new Hono();
 app.use('*', cors({
   origin: process.env.FRONTEND_URL!,
   allowMethods: ['GET', 'POST', 'DELETE', 'PUT'],
-  allowHeaders: ['Content-Type', 'Authorization'],
+  allowHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'Cookie', 
+    'Set-Cookie'
+  ],
   credentials: true,
   maxAge: 3600,
 }));

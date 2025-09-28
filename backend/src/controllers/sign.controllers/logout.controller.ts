@@ -18,10 +18,11 @@ export const logoutController = async (c : Context) => {
             deleteCookie(c, 'refreshToken');
             await db.delete(userSessions).where(eq(userSessions.refreshToken, refreshToken)).execute();
         }
-
         return c.json({ message: "Logged out successfully" }, 200);
         
     } catch (error) {
+        deleteCookie(c, 'accessToken');
+        deleteCookie(c, 'refreshToken');
         return c.json({ message: "Internal server error" }, 500);
         
     }

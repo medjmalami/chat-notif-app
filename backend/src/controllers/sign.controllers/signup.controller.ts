@@ -75,7 +75,6 @@ export const signupController = async (c : Context) => {
         return c.json({
             userId: user.id,
             username: user.username,
-            chats: [],
         });
 
     } catch (error) {

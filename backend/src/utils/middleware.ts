@@ -16,7 +16,6 @@ export const authMiddleware = async (c : Context, next : Next) => {
         c.set('user', decoded);
         await next();
     } catch (error) {
-        return c.json({ message: "Unauthorized" }, 401);
-        
+        return c.json({ message: "Unauthorized" }, 401); 
     }
 };

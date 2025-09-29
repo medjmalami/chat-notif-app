@@ -56,15 +56,7 @@ export const signinController = async (c : Context) => {
 
             //i have to return access token, refresh token , user id , username, chats(id, name, type)
 
-            const userChats = await db
-                                    .select({
-                                      id: chats.id,
-                                      type: chats.type,
-                                      name: chats.name,
-                                    })
-                                    .from(chats)
-                                    .innerJoin(chatMembers, eq(chatMembers.chatId, chats.id))
-                                    .where(eq(chatMembers.userId, user.id))
+
 
             setCookie(c, 'accessToken', accessToken, {
                 httpOnly: true,
@@ -86,7 +78,6 @@ export const signinController = async (c : Context) => {
             return c.json({
                 userId: user.id,
                 username: user.username,
-                chats: userChats,
             });
         }
         else{

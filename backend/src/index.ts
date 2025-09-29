@@ -4,6 +4,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { cors } from 'hono/cors';
 import rateLimit from 'hono-rate-limit';
 import { signRoutes } from './routes/signRoutes';
+import chatRoutes from './routes/chatRoutes';
 
 
 const app = new Hono();
@@ -44,6 +45,7 @@ app.notFound((c) => {
 });
 
 app.route('/', signRoutes);
+app.route('/', chatRoutes);
 
 
 // ✅ Start Server (Bun)

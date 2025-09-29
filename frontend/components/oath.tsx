@@ -1,25 +1,24 @@
 import React, { useState } from 'react';
 
-const GoogleOAuthSignIn = ({ 
-  clientId = "your-google-client-id.apps.googleusercontent.com",
-  redirectUri = process.env.NEXT_PUBLIC_API_BASE_URL + "/auth/callback"
-}) => {
+const GoogleOAuthSignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Google OAuth 2.0 authorization URL
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    
-    const googleAuthUrl = new URL('https://accounts.google.com/oauth/authorize');
-    googleAuthUrl.searchParams.append('client_id', clientId);
-    googleAuthUrl.searchParams.append('redirect_uri', redirectUri);
-    googleAuthUrl.searchParams.append('response_type', 'code');
-    googleAuthUrl.searchParams.append('scope', 'openid email profile');
-    googleAuthUrl.searchParams.append('access_type', 'offline');
-    googleAuthUrl.searchParams.append('prompt', 'consent');
 
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/url`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    const { url } = await response.json();
+    console.log(url);
     // Redirect to Google OAuth
-    window.location.href = googleAuthUrl.toString();
+    window.location.href = url;
   };
 
   return (
@@ -68,19 +67,6 @@ const GoogleOAuthSignIn = ({
         </span>
       </button>
 
-      {/* Usage instructions */}
-      <div className="mt-8 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-        <h3 className="font-medium text-gray-800 mb-2">Setup Instructions:</h3>
-        <ol className="list-decimal list-inside space-y-1">
-          <li>Replace <code className="bg-white px-1 rounded">clientId</code> with your Google OAuth client ID</li>
-          <li>Set up your redirect URI in Google Console</li>
-          <li>Handle the callback to exchange code for tokens</li>
-          <li>Customize the <code className="bg-white px-1 rounded">onSuccess</code> and <code className="bg-white px-1 rounded">onError</code> callbacks</li>
-        </ol>
-        <p className="mt-2 text-xs text-gray-500">
-          Current redirect URI: <code className="bg-white px-1 rounded">{redirectUri}</code>
-        </p>
-      </div>
     </div>
   );
 };

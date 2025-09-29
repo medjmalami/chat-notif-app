@@ -58,7 +58,7 @@ export const signupController = async (c : Context) => {
         setCookie(c, 'accessToken', accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            sameSite: 'Lax',
             maxAge: 10 * 60 , // 10 minutes in seconds
             path: '/'
           })
@@ -67,7 +67,7 @@ export const signupController = async (c : Context) => {
         setCookie(c, 'refreshToken', refreshToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
+          sameSite: 'Lax',
           maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
           path: '/'
         })

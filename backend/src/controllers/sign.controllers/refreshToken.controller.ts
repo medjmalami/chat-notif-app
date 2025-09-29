@@ -5,8 +5,11 @@ import { db } from "../../db";
 import { eq } from "drizzle-orm";
 import { userSessions } from "../../db/schema";
 export const refreshTokenController = async( c : Context  ) => {
+    const allCookies = c.req.raw.headers.get('cookie');
+console.log("Raw cookie header:", allCookies);
     const refreshToken = getCookie(c, 'refreshToken');
     if (!refreshToken) {
+        console.log("no refresh token");
         return c.json({ message: "Unauthorized" }, 401);
     }
     try {
@@ -15,18 +18,21 @@ export const refreshTokenController = async( c : Context  ) => {
         if (!dbUser.length) {
             deleteCookie(c, 'refreshToken');
             deleteCookie(c, 'accessToken');
+            console.log("no user");
             return c.json({ message: "Unauthorized" }, 401);
         }
         const user = dbUser[0];
         if ( user.userId !== refreshTokenPayload.id) {
             deleteCookie(c, 'refreshToken');
             deleteCookie(c, 'accessToken');
+            console.log("user id not match");
             return c.json({ message: "Unauthorized" }, 401);
         }
         const accessToken =  jwt.sign(refreshTokenPayload,process.env.ACCESS_TOKEN_SECRET!,{ expiresIn: '1h' });
         setCookie(c, 'accessToken', accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Lax',
             maxAge: 10 * 60 , // 10 minutes in seconds
             path: '/'
           })
@@ -35,6 +41,7 @@ export const refreshTokenController = async( c : Context  ) => {
         setCookie(c, 'refreshToken', refreshToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
+          sameSite: 'Lax',
           maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
           path: '/'
         })
@@ -44,6 +51,7 @@ export const refreshTokenController = async( c : Context  ) => {
     } catch (error) {
         deleteCookie(c, 'refreshToken');
         deleteCookie(c, 'accessToken');
+        console.log("error");
         return c.json({ message: "Unauthorized" }, 401);
     }
 }

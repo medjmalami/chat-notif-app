@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { z } from "zod";
-import { chatMembers, chats, userSessions, users } from "../../db/schema";
+import { userSessions, users } from "../../db/schema";
 import  jwt  from "jsonwebtoken";
 import { db } from "../../db";
 import { eq } from "drizzle-orm";
@@ -45,8 +45,8 @@ export const signinController = async (c : Context) => {
                 username: user.username,
             };
 
-            const accessToken =  jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET!,{ expiresIn: '1h' });
-            const refreshToken =  jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET!,{ expiresIn: '7d' });
+            const accessToken =  jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET!,{ expiresIn: '1m' });
+            const refreshToken =  jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET!,{ expiresIn: '2m' });
 
             await db.insert(userSessions).values({
                 userId: user.id,
@@ -56,13 +56,11 @@ export const signinController = async (c : Context) => {
 
             //i have to return access token, refresh token , user id , username, chats(id, name, type)
 
-
-
             setCookie(c, 'accessToken', accessToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 10 * 60 , // 10 minutes in seconds
+                sameSite: 'Lax',
+                maxAge: 1 * 60 , // 1 minutes in seconds
                 path: '/',
               })
               
@@ -70,8 +68,8 @@ export const signinController = async (c : Context) => {
             setCookie(c, 'refreshToken', refreshToken, {
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
-              maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+              sameSite: 'Lax',
+              maxAge: /*7 * 24 * 60 **/ 2*60, // 2 minutes in seconds
               path: '/',
             })
 

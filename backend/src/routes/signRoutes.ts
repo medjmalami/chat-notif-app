@@ -9,5 +9,5 @@ export const signRoutes = new Hono();
 signRoutes.post("/signup", signupController);
 signRoutes.post("/signin", signinController);
 signRoutes.get("/logout", logoutController);
-signRoutes.get("/refreshToken", refreshTokenController);
+signRoutes.post("/refreshToken", refreshTokenController);
 signRoutes.get("/auth", authController);

@@ -34,14 +34,10 @@ export const authController = async (c : Context) => {
             });
         
         }else{
-            deleteCookie(c, 'accessToken');
-            deleteCookie(c, 'refreshToken');
             return c.json({ message: "Unauthorized" }, 401);
         }
         
     } catch (error) {
-        deleteCookie(c, 'accessToken');
-        deleteCookie(c, 'refreshToken');
         return c.json({ message: "Unauthorized" }, 401);
         
     }

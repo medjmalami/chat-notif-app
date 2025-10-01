@@ -58,7 +58,7 @@ export const signinController = async (c : Context) => {
 
             setCookie(c, 'accessToken', accessToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: false,
                 sameSite: 'Lax',
                 maxAge: 1 * 60 , // 1 minutes in seconds
                 path: '/',
@@ -67,9 +67,9 @@ export const signinController = async (c : Context) => {
               // Set refresh token
             setCookie(c, 'refreshToken', refreshToken, {
               httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
+              secure: false,
               sameSite: 'Lax',
-              maxAge: /*7 * 24 * 60 **/ 2*60, // 2 minutes in seconds
+              maxAge:  2 * 60, // 2 minutes in seconds /*7 * 24 * 60 **/
               path: '/',
             })
 

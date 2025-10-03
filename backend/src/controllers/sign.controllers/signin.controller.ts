@@ -45,8 +45,8 @@ export const signinController = async (c : Context) => {
                 username: user.username,
             };
 
-            const accessToken =  jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET!,{ expiresIn: '1m' });
-            const refreshToken =  jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET!,{ expiresIn: '2m' });
+            const accessToken =  jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET!,{ expiresIn: '15m' });
+            const refreshToken =  jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET!,{ expiresIn: '7d' });
 
             await db.insert(userSessions).values({
                 userId: user.id,
@@ -54,22 +54,19 @@ export const signinController = async (c : Context) => {
                 expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
             });
 
-            //i have to return access token, refresh token , user id , username, chats(id, name, type)
-
             setCookie(c, 'accessToken', accessToken, {
                 httpOnly: true,
                 secure: false,
                 sameSite: 'Lax',
-                maxAge: 1 * 60 , // 1 minutes in seconds
+                maxAge: 15 * 60 , 
                 path: '/',
               })
               
-              // Set refresh token
             setCookie(c, 'refreshToken', refreshToken, {
               httpOnly: true,
               secure: false,
               sameSite: 'Lax',
-              maxAge:  2 * 60, // 2 minutes in seconds /*7 * 24 * 60 **/
+              maxAge:  60 * 60 * 24 * 7,
               path: '/',
             })
 

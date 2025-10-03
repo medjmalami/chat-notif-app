@@ -15,7 +15,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
   const router = useRouter()
   const { toast } = useToast()
 
@@ -34,11 +33,11 @@ export default function LoginPage() {
       })
       router.push("/chat")
     } else {
-      setError("Invalid credentials")
+      const data = await response.json()
       setIsLoading(false)
       toast({
         title: "Error",
-        description: "Invalid credentials",
+        description: data.message,
         variant: "destructive",
       })
     }
@@ -78,7 +77,6 @@ export default function LoginPage() {
                   className="w-full"
                 />
               </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>

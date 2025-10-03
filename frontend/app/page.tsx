@@ -2,10 +2,12 @@
 import { fetchWrapper } from "../lib/fetchWrapper";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -13,6 +15,10 @@ export default function Home() {
         const res = await fetchWrapper('/auth', 'GET');
         
         if (res.status === 200) {
+          toast({
+            title: "Success",
+            description: "You are now logged in",
+          });
           router.push('/chat');
         } else {
           router.push('/auth/login');

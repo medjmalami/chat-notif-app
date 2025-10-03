@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { fetchWrapper } from "@/lib/fetchWrapper"
 import { toast } from "@/hooks/use-toast"
-import { set } from "date-fns"
 import GoogleOAuthSignIn from "@/components/oath"
 
 export default function RegisterPage() {

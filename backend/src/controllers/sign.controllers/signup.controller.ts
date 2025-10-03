@@ -39,15 +39,13 @@ export const signupController = async (c : Context) => {
             passwordHash: hashedPassword,
         }).returning();
 
-
-
         const user = userId[0];
         const payload  = {
             id: user.id,
             email: user.email,
             username: user.username,
         };
-        const accessToken =  jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET!,{ expiresIn: '1h' });
+        const accessToken =  jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET!,{ expiresIn: '15m' });
         const refreshToken =  jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET!,{ expiresIn: '7d' });
         await db.insert(userSessions).values({
             userId: user.id,
@@ -57,21 +55,19 @@ export const signupController = async (c : Context) => {
 
         setCookie(c, 'accessToken', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: false,
             sameSite: 'Lax',
-            maxAge: 10 * 60 , // 10 minutes in seconds
+            maxAge: 15 * 60 , 
             path: '/'
           })
           
-          // Set refresh token
         setCookie(c, 'refreshToken', refreshToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
+          secure: false,
           sameSite: 'Lax',
-          maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+          maxAge: 7 * 24 * 60 * 60, 
           path: '/'
         })
-        //i have to return access token, refresh token , user id , username, chats(id, name, type)
         return c.json({
             userId: user.id,
             username: user.username,

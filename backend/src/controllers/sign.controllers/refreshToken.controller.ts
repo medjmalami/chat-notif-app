@@ -37,24 +37,36 @@ export const refreshTokenController = async (c: Context) => {
           username: refreshTokenPayload.username
         },
         process.env.ACCESS_TOKEN_SECRET!,
-        { expiresIn: '1h' }
+        { expiresIn: '15m' }
+      );
+
+      const newRefreshToken = jwt.sign(
+        {
+          id: refreshTokenPayload.id,
+          email: refreshTokenPayload.email,
+          username: refreshTokenPayload.username
+        },
+        process.env.REFRESH_TOKEN_SECRET!,
+        { expiresIn: '7d' }
       );
       
       setCookie(c, 'accessToken', accessToken, {
         httpOnly: true,
         secure: false,
         sameSite: 'Lax',
-        maxAge: 10 * 60,
+        maxAge: 15 * 60,
         path: '/'
       });
       
-      setCookie(c, 'refreshToken', refreshToken, {
+      setCookie(c, 'refreshToken', newRefreshToken, {
         httpOnly: true,
         secure: false,
         sameSite: 'Lax',
         maxAge: 7 * 24 * 60 * 60,
         path: '/'
       });
+
+      await db.update(userSessions).set({ refreshToken: newRefreshToken }).where(eq(userSessions.userId, user.userId));
       
       return c.json({ message: "Token refreshed successfully" }, 200);
       

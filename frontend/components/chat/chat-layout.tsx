@@ -1,16 +1,34 @@
 "use client"
 
-import { useState } from "react"
+import { use, useState, useEffect } from "react"
 import { ChatSidebar } from "./chat-sidebar"
 import { ChatArea } from "./chat-area"
-import { mockRooms, mockUsers, mockMessages } from "@/lib/mock-data"
+import { mockMessages } from "@/lib/mock-data"
+import { fetchWrapper } from "@/lib/fetchWrapper"
+
+interface Chats {
+  id: string
+  name: string
+  type: "channel" | "direct"
+  unreadCount?: number
+}
 
 export function ChatLayout() {
-  const [activeRoom, setActiveRoom] = useState(mockRooms[0].id)
+  const [activeRoom, setActiveRoom] = useState("")
   const [newMessage, setNewMessage] = useState("")
+  const [chats, setChats] = useState<Chats[]>([])
 
-  const currentRoom = mockRooms.find((room) => room.id === activeRoom)
+  const currentRoom = chats.find((chat) => chat.id === activeRoom)
   const roomMessages = mockMessages.filter((message) => message.roomId === activeRoom)
+
+  useEffect(() => {
+    const getChats = async () => {
+      const response = await fetchWrapper("/chats", "GET");
+      const data = await response.json();
+      setChats(data);
+    }
+    getChats();
+  }, []);
 
   const handleSendMessage = () => {
     if (!newMessage.trim()) return
@@ -22,7 +40,7 @@ export function ChatLayout() {
 
   return (
     <div className="flex h-screen bg-background">
-      <ChatSidebar rooms={mockRooms} users={mockUsers} activeRoom={activeRoom} onRoomSelect={setActiveRoom} />
+      <ChatSidebar rooms={chats} activeRoom={activeRoom} onRoomSelect={setActiveRoom} />
       <ChatArea
         room={currentRoom}
         messages={roomMessages}

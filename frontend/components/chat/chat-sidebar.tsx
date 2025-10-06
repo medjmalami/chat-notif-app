@@ -18,25 +18,18 @@ interface Room {
   unreadCount?: number
 }
 
-interface User {
-  id: string
-  username: string
-  status: "online" | "away" | "offline"
-}
-
 interface ChatSidebarProps {
   rooms: Room[]
-  users: User[]
   activeRoom: string
   onRoomSelect: (roomId: string) => void
 }
 
-export function ChatSidebar({ rooms, users, activeRoom, onRoomSelect }: ChatSidebarProps) {
+export function ChatSidebar({ rooms, activeRoom, onRoomSelect }: ChatSidebarProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  
 
   const channels = rooms.filter((room) => room.type === "channel")
   const directMessages = rooms.filter((room) => room.type === "direct")
-  const onlineUsers = users.filter((user) => user.status === "online")
 
   const router = useRouter()
 
@@ -137,26 +130,6 @@ export function ChatSidebar({ rooms, users, activeRoom, onRoomSelect }: ChatSide
             </div>
           </div>
 
-          {/* Online Users */}
-          <div>
-            <h3 className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider mb-2 px-2 flex items-center">
-              <Users className="h-3 w-3 mr-1" />
-              Online ({onlineUsers.length})
-            </h3>
-            <div className="space-y-1">
-              {onlineUsers.map((user) => (
-                <div key={user.id} className="flex items-center gap-2 px-2 py-1 text-sm text-sidebar-foreground">
-                  <Avatar className="h-6 w-6">
-                    <AvatarFallback className="text-xs bg-accent text-accent-foreground">
-                      {user.username.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="truncate">{user.username}</span>
-                  <div className="h-2 w-2 rounded-full bg-accent ml-auto" />
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </ScrollArea>
     </div>

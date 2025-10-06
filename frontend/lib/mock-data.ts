@@ -40,38 +40,6 @@ export const mockRooms = [
   },
 ]
 
-export const mockUsers = [
-  {
-    id: "alice",
-    username: "Alice Johnson",
-    status: "online" as const,
-  },
-  {
-    id: "bob",
-    username: "Bob Smith",
-    status: "online" as const,
-  },
-  {
-    id: "charlie",
-    username: "Charlie Brown",
-    status: "online" as const,
-  },
-  {
-    id: "diana",
-    username: "Diana Prince",
-    status: "away" as const,
-  },
-  {
-    id: "eve",
-    username: "Eve Wilson",
-    status: "online" as const,
-  },
-  {
-    id: "frank",
-    username: "Frank Miller",
-    status: "online" as const,
-  },
-]
 
 export const mockMessages = [
   {

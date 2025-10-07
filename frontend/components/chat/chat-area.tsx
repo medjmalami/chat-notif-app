@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,14 +18,13 @@ interface Room {
 interface Message {
   id: string
   content: string
-  sender: string
-  timestamp: string
-  roomId: string
+  senderID: string
+  createdAt: string
 }
 
 interface ChatAreaProps {
   room?: Room
-  messages: Message[]
+  messages?: Message[] | null
   newMessage: string
   onMessageChange: (message: string) => void
   onSendMessage: () => void
@@ -62,6 +60,9 @@ export function ChatArea({ room, messages, newMessage, onMessageChange, onSendMe
     )
   }
 
+  // ✅ Ensure messages is always an array
+  const safeMessages = Array.isArray(messages) ? messages : []
+
   return (
     <div className="flex-1 flex flex-col bg-background">
       {/* Chat Header */}
@@ -79,24 +80,24 @@ export function ChatArea({ room, messages, newMessage, onMessageChange, onSendMe
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages.map((message, index) => {
-            const showAvatar = index === 0 || messages[index - 1].sender !== message.sender
-            const isConsecutive = index > 0 && messages[index - 1].sender === message.sender
+          {safeMessages.map((message, index) => {
+            const showAvatar = index === 0 || safeMessages[index - 1]?.senderID !== message.senderID
+            const isConsecutive = index > 0 && safeMessages[index - 1]?.senderID === message.senderID
 
             return (
               <div key={message.id} className={cn("flex gap-3", !showAvatar && "ml-11", isConsecutive && "mt-1")}>
                 {showAvatar && (
                   <Avatar className="h-8 w-8 mt-0.5">
                     <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                      {message.sender.slice(0, 2).toUpperCase()}
+                      {message.senderID.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 )}
                 <div className="flex-1 min-w-0">
                   {showAvatar && (
                     <div className="flex items-baseline gap-2 mb-1">
-                      <span className="font-medium text-foreground">{message.sender}</span>
-                      <span className="text-xs text-muted-foreground">{formatTime(message.timestamp)}</span>
+                      <span className="font-medium text-foreground">{message.senderID}</span>
+                      <span className="text-xs text-muted-foreground">{formatTime(message.createdAt)}</span>
                     </div>
                   )}
                   <p className="text-foreground text-pretty leading-relaxed">{message.content}</p>
@@ -112,7 +113,7 @@ export function ChatArea({ room, messages, newMessage, onMessageChange, onSendMe
       <div className="p-4 border-t border-border bg-card">
         <div className="flex gap-2">
           <Input
-            placeholder={`Message ${room.type === "channel" ? "#" : ""}${room.name}`}
+            placeholder="Message..."
             value={newMessage}
             onChange={(e) => onMessageChange(e.target.value)}
             onKeyPress={handleKeyPress}

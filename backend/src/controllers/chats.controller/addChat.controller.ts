@@ -6,42 +6,54 @@ import { db } from "../../db";
 const reqSchema = z.object({
     name: z.string().min(3),
     type: z.string().min(3),
-    chatMembers: z.array(z.uuid()),
+    chatMembers: z.array(z.string()).optional().default([]),
 });
-interface reqType extends z.infer<typeof reqSchema> {}
+type ReqType = z.infer<typeof reqSchema>;
 
-export const addChatController = async (c : Context) => {
+export const addChatController = async (c: Context) => {
     try {
-
         const body = await c.req.json();
         const validation = reqSchema.safeParse(body);
+
         if (!validation.success) {
-            return c.json({messages: "Invalid request"}, 400);
+            return c.json({ message: "Invalid request" }, 400);
         }
 
-        const req : reqType = validation.data;
+        const user = c.get("user");
+        if (!user) {
+            return c.json({ message: "Unauthorized" }, 401);
+        }
 
-        const chatId = await db.insert(chats).values({
-            name: req.name,
-            type: req.type,
-        }).returning();
+        const req: ReqType = validation.data;
 
-        const chat = chatId[0];
+        // Create the chat
+        const [chat] = await db
+            .insert(chats)
+            .values({
+                name: req.name,
+                type: req.type,
+            })
+            .returning();
 
-        for (const member of req.chatMembers) {
+        // Build unique member list (avoid duplicates)
+        const uniqueMembers = Array.from(new Set([...req.chatMembers, user.id]));
+
+        // Add members (including the creator)
+        for (const member of uniqueMembers) {
             await db.insert(chatMembers).values({
                 chatId: chat.id,
                 userId: member,
             });
         }
-        
+
         return c.json({
             chatId: chat.id,
             name: chat.name,
             type: chat.type,
+            members: uniqueMembers,
         });
-
     } catch (error) {
+        console.error(error);
         return c.json({ message: "Internal server error" }, 500);
     }
 };

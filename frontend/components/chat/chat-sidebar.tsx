@@ -10,6 +10,7 @@ import { Hash, Users, Bell, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWrapper } from "@/lib/fetchWrapper"
 import { useRouter } from "next/navigation"
+import { CreateChatDialog } from "./create-chat-dialog"
 
 interface Room {
   id: string
@@ -22,9 +23,10 @@ interface ChatSidebarProps {
   rooms: Room[]
   activeRoom: string
   onRoomSelect: (roomId: string) => void
+  onChatCreated: () => void
 }
 
-export function ChatSidebar({ rooms, activeRoom, onRoomSelect }: ChatSidebarProps) {
+export function ChatSidebar({ rooms, activeRoom, onRoomSelect, onChatCreated }: ChatSidebarProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   
 
@@ -34,25 +36,23 @@ export function ChatSidebar({ rooms, activeRoom, onRoomSelect }: ChatSidebarProp
   const router = useRouter()
 
   const handleLogout = async () => {
-    if (isLoggingOut) return // prevent double click
+    if (isLoggingOut) return
     setIsLoggingOut(true)
     await fetchWrapper("/logout", "GET")
     setIsLoggingOut(false)
     router.push("/auth/login")
-
   }
 
   return (
     <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
-      {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
         <h1 className="text-lg font-semibold text-sidebar-foreground">ChatApp</h1>
       </div>
 
-      {/* Navigation */}
       <div className="p-2 border-b border-sidebar-border">
-        <div className="flex gap-1">
-          <Button variant="ghost" size="sm" className="flex-1 justify-start" asChild>
+        <div className="space-y-1">
+          <CreateChatDialog onChatCreated={onChatCreated} />
+          <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
             <Link href="/notifications">
               <Bell className="h-4 w-4 mr-2" />
               Notifications
@@ -63,16 +63,16 @@ export function ChatSidebar({ rooms, activeRoom, onRoomSelect }: ChatSidebarProp
             size="sm"
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className={isLoggingOut ? "opacity-50 cursor-not-allowed" : ""}
+            className={`w-full justify-start ${isLoggingOut ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
           </Button>
         </div>
       </div>
 
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-4">
-          {/* Channels */}
           <div>
             <h3 className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider mb-2 px-2">
               Channels
@@ -101,7 +101,6 @@ export function ChatSidebar({ rooms, activeRoom, onRoomSelect }: ChatSidebarProp
             </div>
           </div>
 
-          {/* Direct Messages */}
           <div>
             <h3 className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider mb-2 px-2">
               Direct Messages
@@ -129,7 +128,6 @@ export function ChatSidebar({ rooms, activeRoom, onRoomSelect }: ChatSidebarProp
               ))}
             </div>
           </div>
-
         </div>
       </ScrollArea>
     </div>

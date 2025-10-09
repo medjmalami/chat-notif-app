@@ -3,9 +3,21 @@ import { initSocketAuth } from './auth';
 import { registerChatSocket } from './chatSocket';
 import { db } from '../db';
 import { userSessions, chats, chatMembers } from '../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, lt } from 'drizzle-orm';
 
 export let io: Server;
+
+export async function cleanupExpiredSessions() {
+  try {
+    const now = new Date();
+    const result = await db.delete(userSessions)
+      .where(lt(userSessions.expiresAt, now));
+
+    console.log(`🧹 Cleaned up expired sessions`);
+  } catch (err) {
+    console.error('Error cleaning up sessions:', err);
+  }
+}
 
 export function initSocket(httpServer: any) {
   io = new Server(httpServer, {
@@ -18,6 +30,8 @@ export function initSocket(httpServer: any) {
 
   io.use(initSocketAuth); // handle authentication
 
+  setInterval(cleanupExpiredSessions, 60 * 60 * 1000); //clean sessions every hour
+
   io.on('connection', async (socket) => {
     console.log(`🔌 Socket connected: ${socket.id}`);
     const { userId, refreshToken } = socket.data;
@@ -26,15 +40,6 @@ export function initSocket(httpServer: any) {
       // Save socket ID in DB
       await db.update(userSessions).set({ socketId: socket.id })
         .where(and(eq(userSessions.userId, userId), eq(userSessions.refreshToken, refreshToken)));
-
-      // Join user chats
-      const userChats = await db
-        .select({ id: chats.id })
-        .from(chats)
-        .innerJoin(chatMembers, eq(chatMembers.chatId, chats.id))
-        .where(eq(chatMembers.userId, userId));
-
-      userChats.forEach(({ id }) => socket.join(id));
 
       // Register chat events
       registerChatSocket(io, socket);

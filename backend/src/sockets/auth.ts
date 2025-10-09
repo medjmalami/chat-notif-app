@@ -41,8 +41,16 @@ export async function initSocketAuth(socket: Socket, next: (err?: any) => void) 
 
     console.log(`✅ Socket authenticated: ${payload.username}`);
     next();
-  } catch (err) {
-    console.error('Socket authentication error:', err);
-    next(new Error('Authentication failed'));
+  } catch (err : any) {
+    if (err.name === 'TokenExpiredError') {
+        socket.emit('error', {
+          message: 'Session expired',
+        });
+    }
+    else {
+      console.error('Socket authentication error:', err);
+      next(new Error('Authentication failed'));
+      
+    }   
   }
 }

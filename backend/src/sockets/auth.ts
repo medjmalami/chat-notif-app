@@ -49,8 +49,7 @@ export async function initSocketAuth(socket: Socket, next: (err?: any) => void) 
     }
     else {
       console.error('Socket authentication error:', err);
-      next(new Error('Authentication failed'));
-      
     }   
+    next(new Error('Authentication failed'));
   }
 }

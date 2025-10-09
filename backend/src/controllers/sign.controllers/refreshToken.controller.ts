@@ -66,7 +66,7 @@ export const refreshTokenController = async (c: Context) => {
         path: '/'
       });
 
-      await db.update(userSessions).set({ refreshToken: newRefreshToken }).where(eq(userSessions.userId, user.userId));
+      await db.update(userSessions).set({ refreshToken: newRefreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }).where(eq(userSessions.userId, user.userId));
       
       return c.json({ message: "Token refreshed successfully" }, 200);
       

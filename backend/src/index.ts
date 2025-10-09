@@ -3,11 +3,11 @@ import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import { cors } from 'hono/cors';
 import rateLimit from 'hono-rate-limit';
-import { createServer } from 'http';
+import { serve } from '@hono/node-server';
 import { signRoutes } from './routes/signRoutes';
 import chatRoutes from './routes/chatRoutes';
 import oauthRoutes from './routes/oauthRoutes';
-import { initSocket } from './sockets/index'; // Socket.IO init
+import { initSocket } from './sockets/index';
 
 const app = new Hono();
 
@@ -16,9 +16,9 @@ app.use('*', cors({
   origin: process.env.FRONTEND_URL!,
   allowMethods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'Cookie', 
+    'Content-Type',
+    'Authorization',
+    'Cookie',
     'Set-Cookie'
   ],
   credentials: true,
@@ -33,7 +33,7 @@ app.use('*', logger());
 
 // ✅ Rate Limiting
 app.use('*', rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   limit: 100,
   message: 'Too many requests from this IP, please try again later.',
 }));
@@ -51,14 +51,15 @@ app.route('/', signRoutes);
 app.route('/', chatRoutes);
 app.route('/', oauthRoutes);
 
-// ✅ Create HTTP server for Hono
-const httpServer = createServer(app.fetch as any);
-
-// ✅ Initialize Socket.IO
-initSocket(httpServer);
-
-// ✅ Start Bun server
+// ✅ Create HTTP server properly for both Hono and Socket.IO
 const PORT = Number(process.env.PORT || 3001);
-httpServer.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+
+const server = serve({
+  fetch: app.fetch,
+  port: PORT,
 });
+
+// ✅ Initialize Socket.IO on the same server
+initSocket(server);
+
+console.log(`🚀 Server running on http://localhost:${PORT}`);

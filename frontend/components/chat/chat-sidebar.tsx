@@ -29,9 +29,10 @@ interface ChatSidebarProps {
 export function ChatSidebar({ rooms, activeRoom, onRoomSelect, onChatCreated }: ChatSidebarProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   
-
-  const channels = rooms.filter((room) => room.type === "channel")
-  const directMessages = rooms.filter((room) => room.type === "direct")
+  // Ensure rooms is always an array
+  const safeRooms = Array.isArray(rooms) ? rooms : []
+  const channels = safeRooms.filter((room) => room.type === "channel")
+  const directMessages = safeRooms.filter((room) => room.type === "direct")
 
   const router = useRouter()
 

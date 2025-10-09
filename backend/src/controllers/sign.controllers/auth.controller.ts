@@ -30,7 +30,6 @@ export const authController = async (c : Context) => {
             return c.json({
                 userId: accessTokenPayload.id,
                 username: accessTokenPayload.username,
-                chats: userChats,
             });
         
         }else{

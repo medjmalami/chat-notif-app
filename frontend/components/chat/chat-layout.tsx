@@ -64,7 +64,6 @@ export function ChatLayout() {
     try {
       const response = await fetchWrapper("/chats", "GET")
       if (!response.ok) {
-        console.error("Failed to fetch chats")
         router.push("/auth/login")
         return
       }
@@ -75,7 +74,6 @@ export function ChatLayout() {
     }
   }
 
-  // Fetch current user info
   useEffect(() => {
     const getUserInfo = async () => {
       try {
@@ -96,10 +94,13 @@ export function ChatLayout() {
     getUserInfo()
   }, [router])
 
-  // Initialize socket connection once user is authenticated
   useEffect(() => {
     if (!isAuthenticated) return
 
+    if (!socket.connected) {
+      socket.connect()
+    }
+  
     const refreshToken = async () => {
       try {
         const response = await fetchWrapper("/refreshToken", "POST")
@@ -113,69 +114,44 @@ export function ChatLayout() {
         return false
       }
     }
-
-    const connectSocket = () => {
-      if (!socket.connected) {
-        socket.connect()
-      }
-
-      socket.on("connect", () => {
-        console.log("Socket connected:", socket.id)
+  
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error)
+      toast({
+        title: "Connection Error",
+        description: "Unable to connect to the server. Please check your connection.",
+        variant: "destructive",
       })
-
-      socket.on("connect_error", (error) => {
-        console.error("Socket connection error:", error)
+    })
+  
+    socket.on("error", async (error: SocketError) => {
+      if (error.message === "Session expired") {
+        const success = await refreshToken()
+        if (success) {
+          socket.disconnect()
+          socket.connect()
+          return
+        }
+        router.push("/auth/login")
+      } else {
         toast({
-          title: "Connection Error",
-          description: "Unable to connect to the server. Please check your connection.",
+          title: "Error",
+          description: error.message || "An error occurred",
           variant: "destructive",
         })
-      })
-
-      // Listen for socket errors
-      socket.on("error", async (error: SocketError) => {
-        console.error("Socket error:", error)
-        
-        // Handle session expired error
-        if (error.message === "Session expired") {
-          const success = await refreshToken()
-          if (success) {
-            // Refresh token successful, reconnect socket
-            socket.disconnect()
-            socket.connect()
-            return
-          }
-
-          router.push("/auth/login")
-
-        } else {
-          // Handle other errors
-          toast({
-            title: "Error",
-            description: error.message || "An error occurred",
-            variant: "destructive",
-          })
-        }
-      })
-    }
-
-    connectSocket()
-
-    // Only disconnect on actual unmount, not on re-renders
+      }
+    })
+  
     return () => {
-      // Don't disconnect here - let the socket persist
-      socket.off("connect")
       socket.off("connect_error")
       socket.off("error")
     }
   }, [isAuthenticated, router, toast])
 
-  // Listen for new messages from other users
   useEffect(() => {
     if (!currentUserId) return
 
     const handleNotification = (data: SocketNotification) => {
-      // Only process if it's not an active chat notification
       if (data.isActiveChat) return
 
       const newNotification: Notification = {
@@ -187,7 +163,6 @@ export function ChatLayout() {
         read: false,
       }
 
-      // Show toast notification
       toast({
         title: newNotification.title,
         description: data.content,
@@ -195,17 +170,13 @@ export function ChatLayout() {
     }
 
     const handleNewMessage = (message: RoomMessages) => {
-      console.log("Received new message:", message)
       
-      // Only add message if it's not from current user (to avoid duplicates)
       if (message.senderID !== currentUserId) {
         setRoomMessages((prevMessages) => {
           const messages = Array.isArray(prevMessages) ? prevMessages : []
-          // Check if message already exists to prevent duplicates
           const messageExists = messages.some(m => m.id === message.id)
           if (messageExists) return messages
           
-          console.log("Adding message from other user")
           return [...messages, message]
         })
       }
@@ -220,23 +191,18 @@ export function ChatLayout() {
     }
   }, [currentUserId, toast])
 
-  // Load messages when active room changes
   useEffect(() => {
     const getMessages = async () => {
       try {
-        console.log("Fetching messages for room:", activeRoom)
         const response = await fetchWrapper(`/chat/${activeRoom}`, "GET")
         if (!response.ok) {
-          console.error("Failed to fetch messages")
           router.push("/auth/login")
           return
         }
         const data = await response.json()
-        console.log("Received messages:", data)
         
         const messages = Array.isArray(data) ? data : []
         setRoomMessages(messages)
-        console.log("Set room messages:", messages.length, "messages")
       } catch (error) {
         console.error("Error fetching messages:", error)
         setRoomMessages([])
@@ -251,7 +217,6 @@ export function ChatLayout() {
     }
   }, [activeRoom])
 
-  // Load chats on mount when authenticated
   useEffect(() => {
     if (isAuthenticated) {
       getChats()
@@ -266,9 +231,8 @@ export function ChatLayout() {
       chatId: activeRoom,
     }
 
-    // Create optimistic message to show immediately
     const optimisticMessage: RoomMessages = {
-      id: `temp-${Date.now()}`, // Temporary ID until server responds
+      id: `temp-${Date.now()}`, 
       content: newMessage,
       senderID: currentUserId,
       senderName: currentUserName,
@@ -276,13 +240,11 @@ export function ChatLayout() {
       createdAt: new Date().toISOString(),
     }
 
-    // Add message to UI immediately for current user
     setRoomMessages((prevMessages) => {
       const messages = Array.isArray(prevMessages) ? prevMessages : []
       return [...messages, optimisticMessage]
     })
 
-    // Send message through socket
     if (socket.connected) {
       socket.emit("send_message", message)
     } else {
@@ -292,14 +254,12 @@ export function ChatLayout() {
         description: "Unable to send message. Please refresh the page.",
         variant: "destructive",
       })
-      // Remove optimistic message if send failed
       setRoomMessages((prevMessages) => {
         const messages = Array.isArray(prevMessages) ? prevMessages : []
         return messages.filter(m => m.id !== optimisticMessage.id)
       })
     }
     
-    // Clear input
     setNewMessage("")
   }
 

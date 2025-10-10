@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Bell, MessageSquare, Loader } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import { fetchWrapper } from "@/lib/fetchWrapper"
 

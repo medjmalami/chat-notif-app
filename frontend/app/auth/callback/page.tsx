@@ -26,7 +26,7 @@ export default function CallbackPage({ searchParams }: { searchParams: { code?: 
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ code }),
-            credentials: "include", // include cookies
+            credentials: "include", 
           });
 
           if (response.status !== 200) {
@@ -36,7 +36,7 @@ export default function CallbackPage({ searchParams }: { searchParams: { code?: 
               variant: "destructive",
             });
           } else {
-            router.push("/"); // redirect on success
+            router.push("/"); 
           }
         } catch (err) {
           console.error("🔴 Fetch error:", err);

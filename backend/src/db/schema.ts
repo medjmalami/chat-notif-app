@@ -1,7 +1,6 @@
 import { pgTable, uuid, varchar, text, boolean, timestamp, index, unique, primaryKey } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// Users table
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   username: varchar('username', { length: 50 }).notNull(),
@@ -11,7 +10,6 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// Google OAuth accounts (minimal for practice)
 export const oauthAccounts = pgTable('oauth_accounts', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
@@ -19,7 +17,6 @@ export const oauthAccounts = pgTable('oauth_accounts', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// Chats table
 export const chats = pgTable('chats', {
   id: uuid('id').primaryKey().defaultRandom(),
   type: varchar('type', { length: 20 }).notNull(),
@@ -27,7 +24,6 @@ export const chats = pgTable('chats', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// Chat members
 export const chatMembers = pgTable('chat_members', {
   id: uuid('id').primaryKey().defaultRandom(),
   chatId: uuid('chat_id').references(() => chats.id, { onDelete: 'cascade' }).notNull(),
@@ -39,7 +35,6 @@ export const chatMembers = pgTable('chat_members', {
   userIdIdx: index('idx_chat_members_user').on(table.userId),
 }));
 
-// Messages
 export const messages = pgTable('messages', {
   id: uuid('id').primaryKey().defaultRandom(),
   chatId: uuid('chat_id').references(() => chats.id, { onDelete: 'cascade' }).notNull(),
@@ -50,7 +45,6 @@ export const messages = pgTable('messages', {
   chatCreatedAtIdx: index('idx_messages_chat').on(table.chatId, table.createdAt),
 }));
 
-// Notification queue
 export const notificationQueue = pgTable('notification_queue', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
@@ -62,7 +56,6 @@ export const notificationQueue = pgTable('notification_queue', {
   userIdIdx: index('idx_notification_queue_user').on(table.userId),
 }));
 
-// User sessions
 export const userSessions = pgTable('user_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
@@ -73,7 +66,6 @@ export const userSessions = pgTable('user_sessions', {
   expiresAt: timestamp('expires_at').notNull(),
 });
 
-// Relations
 export const usersRelations = relations(users, ({ many }) => ({
   oauthAccounts: many(oauthAccounts),
   chatMembers: many(chatMembers),

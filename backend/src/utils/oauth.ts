@@ -15,7 +15,7 @@ export async function getGoogleOAuthTokens(code: string) {
       body: new URLSearchParams(params),
     });
   
-    return response.json(); // Returns { access_token, ... }
+    return response.json(); 
   }
 
   export async function getGoogleUser(access_token: string) {
@@ -23,5 +23,5 @@ export async function getGoogleOAuthTokens(code: string) {
       `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${access_token}`
     );
   
-    return response.json(); // Returns { id, email, name, picture, ... }
+    return response.json(); 
   }

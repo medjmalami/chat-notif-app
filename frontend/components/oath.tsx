@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 const GoogleOAuthSignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  // Google OAuth 2.0 authorization URL
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
 
@@ -16,8 +15,6 @@ const GoogleOAuthSignIn = () => {
       }
     )
     const { url } = await response.json();
-    console.log(url);
-    // Redirect to Google OAuth
     window.location.href = url;
   };
 

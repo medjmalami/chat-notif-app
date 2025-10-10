@@ -6,7 +6,6 @@ import { userSessions, chatMembers, messages, notificationQueue } from '../db/sc
 export function registerChatSocket(io: Server, socket: Socket) {
   const { userId, refreshToken, username } = socket.data;
 
-  // Set active chat
   socket.on('chatID', async (chatId: string) => {
     try {
       const membership = await db.select().from(chatMembers)
@@ -18,13 +17,11 @@ export function registerChatSocket(io: Server, socket: Socket) {
       await db.update(userSessions).set({ activeChatId: chatId })
         .where(and(eq(userSessions.userId, userId), eq(userSessions.refreshToken, refreshToken)));
 
-      console.log(`✅ User ${userId} set active chat: ${chatId}`);
     } catch (err) {
       console.error('Error setting active chat:', err);
     }
   });
 
-  // Send message
   socket.on('send_message', async ({ chatId, content }: { chatId: string; content: string }) => {
     try {
       if (!content?.trim() || content.trim().length === 0) {
@@ -42,7 +39,6 @@ export function registerChatSocket(io: Server, socket: Socket) {
         return;
       }
   
-      // Verify sender is a member of the chat
       const membership = await db.select().from(chatMembers)
         .where(and(eq(chatMembers.userId, userId), eq(chatMembers.chatId, chatId)))
         .limit(1);
@@ -52,7 +48,6 @@ export function registerChatSocket(io: Server, socket: Socket) {
         return;
       }
   
-      // Insert message
       const [newMessage] = await db.insert(messages)
         .values({ chatId, senderId: userId, content })
         .returning();
@@ -60,16 +55,13 @@ export function registerChatSocket(io: Server, socket: Socket) {
       const chatMembersList = await db.select().from(chatMembers)
         .where(eq(chatMembers.chatId, chatId));
   
-      // Collect all user IDs (excluding sender)
       const memberUserIds = chatMembersList
         .map(m => m.userId)
         .filter(id => id !== userId);
   
-      // Single query for all sessions
       const allSessions = await db.select().from(userSessions)
         .where(inArray(userSessions.userId, memberUserIds));
   
-      // Map sessions by user ID
       const sessionsByUserId = new Map<string, typeof allSessions>();
       for (const session of allSessions) {
         if (!sessionsByUserId.has(session.userId)) {
@@ -78,17 +70,13 @@ export function registerChatSocket(io: Server, socket: Socket) {
         sessionsByUserId.get(session.userId)!.push(session);
       }
   
-      // Prepare offline notifications batch
       const offlineNotifications: typeof notificationQueue.$inferInsert[] = [];
   
-      // Process each member (excluding sender)
       for (const member of chatMembersList) {
-        // Skip the sender
         if (member.userId === userId) continue;
 
         const memberSessions = sessionsByUserId.get(member.userId) || [];
   
-        // Case 1: No sessions exist - user is completely offline
         if (memberSessions.length === 0) {
           offlineNotifications.push({
             userId: member.userId,
@@ -98,7 +86,6 @@ export function registerChatSocket(io: Server, socket: Socket) {
           continue;
         }
 
-        // Case 2 & 3: Sessions exist - check if any have active socket connections
         const connectedSockets = memberSessions
           .filter(session => session.socketId)
           .map(session => {
@@ -107,7 +94,6 @@ export function registerChatSocket(io: Server, socket: Socket) {
           })
           .filter(Boolean) as { socket: Socket; session: typeof allSessions[0] }[];
 
-        // Case 2: Sessions exist but NO active socket connections
         if (connectedSockets.length === 0) {
           offlineNotifications.push({
             userId: member.userId,
@@ -117,7 +103,6 @@ export function registerChatSocket(io: Server, socket: Socket) {
           continue;
         }
 
-        // Case 3: At least one active socket connection exists - deliver in real-time
         for (const { socket: targetSocket, session } of connectedSockets) {
           const isActiveChat = session.activeChatId === chatId;
           targetSocket.emit(isActiveChat ? 'new_message' : 'notification', {
@@ -132,12 +117,10 @@ export function registerChatSocket(io: Server, socket: Socket) {
         }
       }
   
-      // Batch insert all offline notifications at once
       if (offlineNotifications.length > 0) {
         await db.insert(notificationQueue).values(offlineNotifications);
       }
   
-      console.log(`📤 Message sent by ${username} to chat ${chatId} - ${offlineNotifications.length} offline notification(s)`);
     } catch (err) {
       console.error('Error sending message:', err);
       socket.emit('error', {

@@ -25,14 +25,10 @@ export const createUserController = async (c : Context) => {
         const req : reqType = validation.data;
 
         const code = req.code;
-        console.log('🔵 code:', code);
 
         const { access_token } = await getGoogleOAuthTokens(code);
-        console.log('🔵 access_token:', access_token);
         
         const googleUser = await getGoogleUser(access_token);
-        console.log('🔵 googleUser:', googleUser);
-        // googleUser = { id, email, name, picture, ... }
 
         let payload;
     

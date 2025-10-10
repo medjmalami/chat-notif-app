@@ -5,8 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Hash, Users, Bell, LogOut } from "lucide-react"
+import { Hash, Bell, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fetchWrapper } from "@/lib/fetchWrapper"
 import { useRouter } from "next/navigation"
@@ -29,7 +28,6 @@ interface ChatSidebarProps {
 export function ChatSidebar({ rooms, activeRoom, onRoomSelect, onChatCreated }: ChatSidebarProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   
-  // Ensure rooms is always an array
   const safeRooms = Array.isArray(rooms) ? rooms : []
   const channels = safeRooms.filter((room) => room.type === "channel")
   const directMessages = safeRooms.filter((room) => room.type === "direct")

@@ -26,7 +26,6 @@ export const addChatController = async (c: Context) => {
 
         const req: ReqType = validation.data;
 
-        // Create the chat
         const [chat] = await db
             .insert(chats)
             .values({
@@ -35,10 +34,8 @@ export const addChatController = async (c: Context) => {
             })
             .returning();
 
-        // Build unique member list (avoid duplicates)
         const uniqueMembers = Array.from(new Set([...req.chatMembers, user.id]));
 
-        // Add members (including the creator)
         for (const member of uniqueMembers) {
             await db.insert(chatMembers).values({
                 chatId: chat.id,

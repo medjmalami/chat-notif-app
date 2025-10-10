@@ -41,5 +41,5 @@ export default function Home() {
     );
   }
 
-  return null; // Component will redirect, so no need to render anything
+  return null; 
 }

@@ -81,7 +81,6 @@ export function ChatArea({ room, messages, newMessage, onMessageChange, onSendMe
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {safeMessages.map((message) => {
-            // Get display name, fallback to "Unknown User" if not provided
             const displayName = message.senderName || "Unknown User"
 
             return (

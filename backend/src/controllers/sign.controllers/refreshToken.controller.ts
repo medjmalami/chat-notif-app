@@ -10,9 +10,7 @@ export const refreshTokenController = async (c: Context) => {
     if (!refreshToken) {
       return c.json({ message: "Unauthorized" }, 401);
     }
-    
-    console.log('🔵 refreshToken endpoint');
-    console.log('🔵 refreshToken:', refreshToken);
+
     
     try {
       const refreshTokenPayload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as jwt.JwtPayload;

@@ -4,129 +4,47 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Bell, MessageSquare, UserPlus, Settings, AtSign, CheckCheck } from "lucide-react"
+import { ArrowLeft, Bell, MessageSquare, Loader } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { socket } from "@/lib/socket"
-import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
+import { fetchWrapper } from "@/lib/fetchWrapper"
 
 interface Notification {
   id: string
-  type: "message" | "user_joined" | "system" | "mention"
-  title: string
   content: string
-  timestamp: string
-  read: boolean
-}
-
-interface SocketNotification {
-  id: string
-  chatId: string
-  senderId: string
-  content: string
-  createdAt: string
-  senderName: string
-  isActiveChat: boolean
+  senderUsername: string
+  messageCreatedAt: string
 }
 
 export function NotificationsLayout() {
-  const { toast } = useToast()
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const [filter, setFilter] = useState<"all" | "unread">("all")
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
-  // Listen for socket notifications
   useEffect(() => {
-
-    const handleNotification = (data: SocketNotification) => {
-      // Only process if it's not an active chat notification
-      if (data.isActiveChat) return
-
-      const newNotification: Notification = {
-        id: data.id,
-        type: "message",
-        title: `New message from ${data.senderName}`,
-        content: data.content,
-        timestamp: data.createdAt,
-        read: false,
-      }
-
-      setNotifications((prev) => [newNotification, ...prev])
-
-      // Show toast notification
-      toast({
-        title: newNotification.title,
-        description: data.content,
-      })
-    }
-
-    const handleNewMessage = (data: SocketNotification) => {
-      // Process messages from active chats as well
-      const newNotification: Notification = {
-        id: data.id,
-        type: "message",
-        title: `${data.senderName} sent a message`,
-        content: data.content,
-        timestamp: data.createdAt,
-        read: false,
-      }
-
-      setNotifications((prev) => [newNotification, ...prev])
-
-      // Show toast notification
-      toast({
-        title: newNotification.title,
-        description: data.content,
-      })
-    }
-
-    socket.on("notification", handleNotification)
-    socket.on("new_message", handleNewMessage)
-
-    return () => {
-      socket.off("notification", handleNotification)
-      socket.off("new_message", handleNewMessage)
-    }
+    fetchNotifications()
   }, [])
 
-  const unreadCount = notifications.filter((n) => !n.read).length
-  const filteredNotifications = filter === "unread" ? notifications.filter((n) => !n.read) : notifications
-
-  const markAsRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
-  }
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-  }
-
-  const getNotificationIcon = (type: Notification["type"]) => {
-    switch (type) {
-      case "message":
-        return <MessageSquare className="h-4 w-4" />
-      case "user_joined":
-        return <UserPlus className="h-4 w-4" />
-      case "system":
-        return <Settings className="h-4 w-4" />
-      case "mention":
-        return <AtSign className="h-4 w-4" />
-      default:
-        return <Bell className="h-4 w-4" />
-    }
-  }
-
-  const getNotificationColor = (type: Notification["type"]) => {
-    switch (type) {
-      case "message":
-        return "text-primary"
-      case "user_joined":
-        return "text-accent"
-      case "system":
-        return "text-muted-foreground"
-      case "mention":
-        return "text-secondary"
-      default:
-        return "text-muted-foreground"
+  const fetchNotifications = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const response = await fetchWrapper("/notifs", "GET")
+      
+      if (!response.ok) {
+        router.push("/auth/login")
+        return
+      }
+      
+      const data = await response.json()
+      setNotifications(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred")
+      console.error("Error fetching notifications:", err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -144,6 +62,32 @@ export function NotificationsLayout() {
     }
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-4xl mx-auto p-4">
+          <div className="flex items-center gap-4 mb-6">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/chat">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Chat
+              </Link>
+            </Button>
+          </div>
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Bell className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <p className="text-destructive mb-4">{error}</p>
+              <Button variant="outline" onClick={fetchNotifications}>
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-4">
@@ -159,65 +103,49 @@ export function NotificationsLayout() {
             <div className="flex items-center gap-2">
               <Bell className="h-6 w-6 text-primary" />
               <h1 className="text-2xl font-bold text-balance">Notifications</h1>
-              {unreadCount > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {unreadCount} new
-                </Badge>
-              )}
             </div>
           </div>
-          {unreadCount > 0 && (
-            <Button variant="outline" size="sm" onClick={markAllAsRead}>
-              <CheckCheck className="h-4 w-4 mr-2" />
-              Mark all as read
-            </Button>
-          )}
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="flex gap-2 mb-6">
-          <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
-            All ({notifications.length})
-          </Button>
-          <Button variant={filter === "unread" ? "default" : "outline"} size="sm" onClick={() => setFilter("unread")}>
-            Unread ({unreadCount})
+          <Button variant="outline" size="sm" onClick={fetchNotifications} disabled={isLoading}>
+            {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : "Refresh"}
           </Button>
         </div>
 
         {/* Notifications List */}
         <ScrollArea className="h-[calc(100vh-200px)]">
           <div className="space-y-3">
-            {filteredNotifications.length === 0 ? (
+            {isLoading ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Loader className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+                  <p className="text-muted-foreground">Loading notifications...</p>
+                </CardContent>
+              </Card>
+            ) : notifications.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
                   <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    {filter === "unread" ? "No unread notifications" : "No notifications yet"}
-                  </p>
+                  <p className="text-muted-foreground">No notifications</p>
                 </CardContent>
               </Card>
             ) : (
-              filteredNotifications.map((notification) => (
+              notifications.map((notification) => (
                 <Card
                   key={notification.id}
-                  className={cn(
-                    "cursor-pointer transition-colors hover:bg-muted/50",
-                    !notification.read && "border-primary/50 bg-primary/5",
-                  )}
-                  onClick={() => markAsRead(notification.id)}
+                  className="transition-colors hover:bg-muted/50"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className={cn("mt-1", getNotificationColor(notification.type))}>
-                        {getNotificationIcon(notification.type)}
+                      <div className="mt-1 text-primary">
+                        <MessageSquare className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-medium text-foreground text-pretty">{notification.title}</h3>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">{formatTime(notification.timestamp)}</span>
-                            {!notification.read && <div className="h-2 w-2 rounded-full bg-primary" />}
-                          </div>
+                          <h3 className="font-medium text-foreground">
+                            <span className="font-semibold">{notification.senderUsername}</span> sent a message
+                          </h3>
+                          <span className="text-xs text-muted-foreground">
+                            {formatTime(notification.messageCreatedAt)}
+                          </span>
                         </div>
                         <p className="text-sm text-muted-foreground text-pretty leading-relaxed">
                           {notification.content}

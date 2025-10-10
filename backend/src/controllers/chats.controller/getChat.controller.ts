@@ -1,11 +1,25 @@
 import { Context } from "hono";
 import { db } from "../../db";
-import { messages, users } from "../../db/schema";
-import { eq } from "drizzle-orm";
+import { messages, users, chatMembers } from "../../db/schema";
+import { eq, and } from "drizzle-orm";
 
 export const getChatController = async (c: Context) => {
   try {
     const chatId = c.req.param("chatId");
+    const user = c.get('user');
+
+    const member = await db.select(
+      {
+        chatId: chatMembers.chatId,
+        userId: chatMembers.userId,
+      }
+    ).from(chatMembers).where(
+      and(eq(chatMembers.chatId, chatId), eq(chatMembers.userId, user.id))
+    )
+
+    if (!member.length) {
+      return c.json({ message: "Unauthorized" }, 401);
+    }
 
     const Messages = await db
       .select({

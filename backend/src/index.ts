@@ -8,6 +8,7 @@ import { signRoutes } from './routes/signRoutes';
 import chatRoutes from './routes/chatRoutes';
 import oauthRoutes from './routes/oauthRoutes';
 import { initSocket } from './sockets/index';
+import notifRoutes from './routes/notifRoutes';
 
 const app = new Hono();
 
@@ -50,6 +51,7 @@ app.notFound((c) => {
 app.route('/', signRoutes);
 app.route('/', chatRoutes);
 app.route('/', oauthRoutes);
+app.route('/', notifRoutes);
 
 // ✅ Create HTTP server properly for both Hono and Socket.IO
 const PORT = Number(process.env.PORT || 3001);

@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Send, Hash } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 interface Room {
   id: string
@@ -81,30 +80,22 @@ export function ChatArea({ room, messages, newMessage, onMessageChange, onSendMe
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {safeMessages.map((message, index) => {
-            // Show avatar and name if first message or different sender from previous
-            const showAvatar = index === 0 || safeMessages[index - 1]?.senderID !== message.senderID
-            const isConsecutive = index > 0 && safeMessages[index - 1]?.senderID === message.senderID
-
+          {safeMessages.map((message) => {
             // Get display name, fallback to "Unknown User" if not provided
             const displayName = message.senderName || "Unknown User"
 
             return (
-              <div key={message.id} className={cn("flex gap-3", !showAvatar && "ml-11", isConsecutive && "mt-1")}>
-                {showAvatar && (
-                  <Avatar className="h-8 w-8 mt-0.5">
-                    <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                      {displayName.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
+              <div key={message.id} className="flex gap-3">
+                <Avatar className="h-8 w-8 mt-0.5">
+                  <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                    {displayName.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1 min-w-0">
-                  {showAvatar && (
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="font-medium text-foreground">{displayName}</span>
-                      <span className="text-xs text-muted-foreground">{formatTime(message.createdAt)}</span>
-                    </div>
-                  )}
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-medium text-foreground">{displayName}</span>
+                    <span className="text-xs text-muted-foreground">{formatTime(message.createdAt)}</span>
+                  </div>
                   <p className="text-foreground text-pretty leading-relaxed">{message.content}</p>
                 </div>
               </div>

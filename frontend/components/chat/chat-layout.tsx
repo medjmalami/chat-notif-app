@@ -3,7 +3,9 @@ import { useState, useEffect, useRef } from "react"
 import { ChatSidebar } from "./chat-sidebar"
 import { ChatArea } from "./chat-area"
 import { fetchWrapper } from "@/lib/fetchWrapper"
-import { io, Socket } from "socket.io-client"
+import { socket } from "@/lib/socket"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 interface Chats {
   id: string
@@ -21,6 +23,25 @@ interface RoomMessages {
   chatId: string
 }
 
+interface SocketNotification {
+  id: string
+  chatId: string
+  senderId: string
+  content: string
+  createdAt: string
+  senderName: string
+  isActiveChat: boolean
+}
+
+interface Notification {
+  id: string
+  type: "message" | "user_joined" | "system" | "mention"
+  title: string
+  content: string
+  timestamp: string
+  read: boolean
+}
+
 export function ChatLayout() {
   const [activeRoom, setActiveRoom] = useState("")
   const [newMessage, setNewMessage] = useState("")
@@ -28,7 +49,8 @@ export function ChatLayout() {
   const [roomMessages, setRoomMessages] = useState<RoomMessages[]>([])
   const [currentUserId, setCurrentUserId] = useState<string>("")
   const [currentUserName, setCurrentUserName] = useState<string>("")
-  const socketRef = useRef<Socket | null>(null)
+  const router = useRouter()
+  const { toast } = useToast()
   
   const safeChats = Array.isArray(chats) ? chats : []
   const currentRoom = safeChats.find((chat) => chat.id === activeRoom)
@@ -44,6 +66,9 @@ export function ChatLayout() {
     const getUserInfo = async () => {
       try {
         const response = await fetchWrapper("/auth", "GET")
+        if (!response.ok) {
+          router.push("/auth/login")
+        }
         const userData = await response.json()
         setCurrentUserId(userData.userId)
         setCurrentUserName(userData.username)
@@ -56,12 +81,6 @@ export function ChatLayout() {
 
   // Initialize socket connection once
   useEffect(() => {
-    socketRef.current = io(process.env.NEXT_PUBLIC_API_BASE_URL!, {
-      withCredentials: true,
-      transports: ["websocket"],
-    })
-
-    const socket = socketRef.current
 
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id)
@@ -78,8 +97,25 @@ export function ChatLayout() {
 
   // Listen for new messages from other users
   useEffect(() => {
-    const socket = socketRef.current
-    if (!socket) return
+    const handleNotification = (data: SocketNotification) => {
+      // Only process if it's not an active chat notification
+      if (data.isActiveChat) return
+
+      const newNotification: Notification = {
+        id: data.id,
+        type: "message",
+        title: `New message from ${data.senderName}`,
+        content: data.content,
+        timestamp: data.createdAt,
+        read: false,
+      }
+
+      // Show toast notification
+      toast({
+        title: newNotification.title,
+        description: data.content,
+      })
+    }
 
     const handleNewMessage = (message: RoomMessages) => {
       console.log("Received new message:", message)
@@ -99,6 +135,7 @@ export function ChatLayout() {
     }
 
     socket.on("new_message", handleNewMessage)
+    socket.on("notification", handleNotification)
 
     return () => {
       socket.off("new_message", handleNewMessage)
@@ -123,9 +160,9 @@ export function ChatLayout() {
       }
     }
 
-    if (activeRoom && socketRef.current) {
+    if (activeRoom && socket) {
       getMessages()
-      socketRef.current.emit("chatID", activeRoom)
+      socket.emit("chatID", activeRoom)
     }
   }, [activeRoom])
 
@@ -135,7 +172,7 @@ export function ChatLayout() {
   }, [])
 
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !socketRef.current || !currentUserId || !currentUserName) return
+    if (!newMessage.trim() || !socket || !currentUserId || !currentUserName) return
 
     const message = {
       content: newMessage,
@@ -159,7 +196,7 @@ export function ChatLayout() {
     })
 
     // Send message through socket
-    socketRef.current.emit("send_message", message)
+    socket.emit("send_message", message)
     
     // Clear input
     setNewMessage("")

@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Bell, MessageSquare, UserPlus, Settings, AtSign, CheckCheck } from "lucide-react"
-import { mockNotifications } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
+import { socket } from "@/lib/socket"
+import { useToast } from "@/hooks/use-toast"
 
 interface Notification {
   id: string
@@ -19,9 +20,74 @@ interface Notification {
   read: boolean
 }
 
+interface SocketNotification {
+  id: string
+  chatId: string
+  senderId: string
+  content: string
+  createdAt: string
+  senderName: string
+  isActiveChat: boolean
+}
+
 export function NotificationsLayout() {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
+  const { toast } = useToast()
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [filter, setFilter] = useState<"all" | "unread">("all")
+
+  // Listen for socket notifications
+  useEffect(() => {
+
+    const handleNotification = (data: SocketNotification) => {
+      // Only process if it's not an active chat notification
+      if (data.isActiveChat) return
+
+      const newNotification: Notification = {
+        id: data.id,
+        type: "message",
+        title: `New message from ${data.senderName}`,
+        content: data.content,
+        timestamp: data.createdAt,
+        read: false,
+      }
+
+      setNotifications((prev) => [newNotification, ...prev])
+
+      // Show toast notification
+      toast({
+        title: newNotification.title,
+        description: data.content,
+      })
+    }
+
+    const handleNewMessage = (data: SocketNotification) => {
+      // Process messages from active chats as well
+      const newNotification: Notification = {
+        id: data.id,
+        type: "message",
+        title: `${data.senderName} sent a message`,
+        content: data.content,
+        timestamp: data.createdAt,
+        read: false,
+      }
+
+      setNotifications((prev) => [newNotification, ...prev])
+
+      // Show toast notification
+      toast({
+        title: newNotification.title,
+        description: data.content,
+      })
+    }
+
+    socket.on("notification", handleNotification)
+    socket.on("new_message", handleNewMessage)
+
+    return () => {
+      socket.off("notification", handleNotification)
+      socket.off("new_message", handleNewMessage)
+    }
+  }, [])
 
   const unreadCount = notifications.filter((n) => !n.read).length
   const filteredNotifications = filter === "unread" ? notifications.filter((n) => !n.read) : notifications

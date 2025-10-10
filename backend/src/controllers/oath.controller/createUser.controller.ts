@@ -68,7 +68,7 @@ export const createUserController = async (c : Context) => {
         }
 
         const accessToken =  jwt.sign(payload,process.env.ACCESS_TOKEN_SECRET!,{ expiresIn: '15m' });
-        const refreshToken =  jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET!,{ expiresIn: '7d' });
+        const refreshToken =  jwt.sign(payload,process.env.REFRESH_TOKEN_SECRET!,{ expiresIn: '1d' });
     
         await db.insert(userSessions).values({
                         userId: payload.id,

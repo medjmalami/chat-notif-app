@@ -24,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Plus } from "lucide-react"
 import { fetchWrapper } from "@/lib/fetchWrapper"
+import { useRouter } from "next/navigation"
 
 interface User {
   id: string
@@ -42,12 +43,16 @@ export function CreateChatDialog({ onChatCreated }: CreateChatDialogProps) {
   const [selectedMembers, setSelectedMembers] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchUsers = async () => {
       setIsLoadingUsers(true)
       try {
         const response = await fetchWrapper("/users", "GET")
+        if (!response.ok) {
+          router.push("/auth/login")
+        }
         const data = await response.json()
         setUsers(data)
       } catch (error) {
@@ -90,6 +95,8 @@ export function CreateChatDialog({ onChatCreated }: CreateChatDialogProps) {
         setSelectedMembers([])
         setOpen(false)
         onChatCreated()
+      }else{
+        router.push("/auth/login")
       }
     } catch (error) {
       console.error("Failed to create chat:", error)

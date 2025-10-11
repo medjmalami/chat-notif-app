@@ -53,17 +53,21 @@ export const signupController = async (c : Context) => {
             expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
         });
 
-        c.header(
-            'Set-Cookie',
-            `accessToken=${accessToken}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${15 * 60}`,
-            { append: true }
-          )
+        setCookie(c, 'accessToken', accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None',
+            maxAge: 15 * 60 , 
+            path: '/'
+          })
           
-          c.header(
-            'Set-Cookie',
-            `refreshToken=${refreshToken}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${60 * 60 * 24 * 7}`,
-            { append: true }
-          )
+        setCookie(c, 'refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'None',
+          maxAge: 7 * 24 * 60 * 60, 
+          path: '/'
+        })
         return c.json({
             userId: user.id,
             username: user.username,

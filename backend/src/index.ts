@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
-import { secureHeaders } from 'hono/secure-headers';
 import { cors } from 'hono/cors';
 import rateLimit from 'hono-rate-limit';
 import { serve } from '@hono/node-server';
@@ -23,9 +22,6 @@ app.use('*', cors({
   credentials: true,
   maxAge: 3600,
 }));
-
-// ✅ HTTP Security Headers
-app.use('*', secureHeaders());
 
 // ✅ Logging
 app.use('*', logger());

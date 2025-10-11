@@ -18,9 +18,7 @@ app.use('*', cors({
   allowMethods: ['GET', 'POST', 'DELETE', 'PUT'],
   allowHeaders: [
     'Content-Type',
-    'Authorization',
-    'Cookie',
-    'Set-Cookie'
+    'Authorization'
   ],
   credentials: true,
   maxAge: 3600,

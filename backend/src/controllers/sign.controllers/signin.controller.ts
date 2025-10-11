@@ -57,7 +57,7 @@ export const signinController = async (c : Context) => {
             setCookie(c, 'accessToken', accessToken, {
                 httpOnly: true,
                 secure: true,
-                sameSite: 'none',
+                sameSite: 'None',
                 maxAge: 15 * 60 , 
                 path: '/',
               })
@@ -65,7 +65,7 @@ export const signinController = async (c : Context) => {
             setCookie(c, 'refreshToken', refreshToken, {
               httpOnly: true,
               secure: true,
-              sameSite: 'none',
+              sameSite: 'None',
               maxAge:  60 * 60 * 24 * 7,
               path: '/',
             })

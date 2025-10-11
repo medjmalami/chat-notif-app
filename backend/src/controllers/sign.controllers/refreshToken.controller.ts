@@ -54,7 +54,7 @@ export const refreshTokenController = async (c: Context) => {
       setCookie(c, 'accessToken', accessToken, {
         httpOnly: true,
         secure: true,
-        sameSite: 'none',
+        sameSite: 'None',
         maxAge: 15 * 60,
         path: '/'
       });
@@ -62,7 +62,7 @@ export const refreshTokenController = async (c: Context) => {
       setCookie(c, 'refreshToken', newRefreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: 'none',
+        sameSite: 'None',
         maxAge: 7 * 24 * 60 * 60,
         path: '/'
       });

@@ -1,7 +1,9 @@
 {
   "name": "backend",
   "scripts": {
-    "dev": "bun --watch run src/index.ts "
+    "dev": "bun --watch run src/index.ts",
+    "build": "tsc",
+    "start": "bun run dist/index.js"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.5",
@@ -24,6 +26,7 @@
     "@types/cookie": "^1.0.0",
     "@types/pg": "^8.15.5",
     "drizzle-kit": "^0.31.4",
-    "tsx": "^4.20.5"
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.3"
   }
 }

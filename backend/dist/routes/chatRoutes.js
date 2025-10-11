@@ -1,0 +1,12 @@
+import { Hono } from "hono";
+import { getChatsController } from "../controllers/chats.controller/getChats.controller";
+import { addChatController } from "../controllers/chats.controller/addChat.controller";
+import { authMiddleware } from "../utils/middleware";
+import { getUsersController } from "../controllers/chats.controller/getUsers.controller";
+import { getChatController } from "../controllers/chats.controller/getChat.controller";
+const chatRoutes = new Hono();
+chatRoutes.get("/chats", authMiddleware, getChatsController);
+chatRoutes.post("/addchat", authMiddleware, addChatController);
+chatRoutes.get("users", authMiddleware, getUsersController);
+chatRoutes.get("/chat/:chatId", authMiddleware, getChatController);
+export default chatRoutes;

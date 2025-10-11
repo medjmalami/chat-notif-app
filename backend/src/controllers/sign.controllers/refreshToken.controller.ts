@@ -53,16 +53,16 @@ export const refreshTokenController = async (c: Context) => {
       
       setCookie(c, 'accessToken', accessToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'Lax',
+        secure: true,
+        sameSite: 'none',
         maxAge: 15 * 60,
         path: '/'
       });
       
       setCookie(c, 'refreshToken', newRefreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'Lax',
+        secure: true,
+        sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60,
         path: '/'
       });

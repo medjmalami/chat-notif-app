@@ -55,16 +55,16 @@ export const signupController = async (c : Context) => {
 
         setCookie(c, 'accessToken', accessToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'Lax',
+            secure: true,
+            sameSite: 'none',
             maxAge: 15 * 60 , 
             path: '/'
           })
           
         setCookie(c, 'refreshToken', refreshToken, {
           httpOnly: true,
-          secure: false,
-          sameSite: 'Lax',
+          secure: true,
+          sameSite: 'none',
           maxAge: 7 * 24 * 60 * 60, 
           path: '/'
         })
